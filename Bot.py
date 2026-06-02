@@ -14,7 +14,7 @@ from telegram.ext import (
 )
 
 # ==================== КОНФИГ ====================
-BOT_TOKEN = "токен_сюда"
+BOT_TOKEN = "5001628950:AAHKe0vlHl2fmQ7p2jLCUo97Mr3yBlzsctg/test"
 PROCESS_LIMIT = 2  # лимит процессов на пользователя
 FILES_DIR = Path("user_files")
 FILES_DIR.mkdir(exist_ok=True)
