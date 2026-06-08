@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>🎭 Mafia Bot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0f0f13;
+    --card: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #e63946;
+    --accent2: #f4a261;
+    --text: #f0f0f0;
+    --sub: #888;
+    --green: #2dc653;
+    --blue: #4a9eff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a0a0a 0%, #2a0d1a 50%, #0d0a1a 100%);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at center, rgba(230,57,70,0.08) 0%, transparent 60%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .logo { font-size: 48px; margin-bottom: 8px; position: relative; z-index:1; }
+  .title { font-size: 22px; font-weight: 800; letter-spacing: 1px; position: relative; z-index:1; }
+  .subtitle { font-size: 13px; color: var(--sub); margin-top: 4px; position: relative; z-index:1; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1; min-width: 80px;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--sub);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* SECTIONS */
+  .section { display: none; padding: 16px; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    color: var(--sub);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  /* PROFILE */
+  .profile-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 12px;
+  }
+  .profile-name {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .profile-level {
+    text-align: center;
+    font-size: 13px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-box {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-val.green { color: var(--green); }
+  .stat-val.red   { color: var(--accent); }
+  .stat-val.blue  { color: var(--blue); }
+  .stat-val.gold  { color: var(--accent2); }
+  .stat-label { font-size: 11px; color: var(--sub); margin-top: 4px; }
+
+  /* WIN RATE BAR */
+  .wr-bar-wrap { margin-top: 14px; }
+  .wr-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+  .wr-bar-bg { background: var(--bg); border-radius: 20px; height: 10px; overflow: hidden; }
+  .wr-bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1s ease;
+  }
+
+  /* ROLES */
+  .role-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .role-card:active { transform: scale(0.98); }
+  .role-header { display: flex; align-items: center; gap: 12px; }
+  .role-emoji { font-size: 32px; }
+  .role-name { font-size: 18px; font-weight: 700; }
+  .role-side { font-size: 11px; color: var(--sub); }
+  .role-body { display: none; margin-top: 12px; font-size: 14px; line-height: 1.6; color: #ccc; }
+  .role-body.open { display: block; }
+  .role-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    margin-top: 8px;
+    margin-right: 4px;
+  }
+
+  /* RULES */
+  .rule-step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .rule-num {
+    width: 32px; height: 32px; min-width: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px;
+  }
+  .rule-text { font-size: 14px; line-height: 1.5; padding-top: 5px; }
+  .rule-text b { color: var(--accent2); }
+
+  /* WIN CONDITIONS */
+  .win-card {
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .win-card.civil { background: rgba(45,198,83,0.1); border: 1px solid rgba(45,198,83,0.2); }
+  .win-card.mafia { background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); }
+  .win-icon { font-size: 32px; }
+  .win-title { font-size: 15px; font-weight: 700; }
+  .win-desc  { font-size: 12px; color: var(--sub); margin-top: 3px; }
+
+  /* TIPS */
+  .tip {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--blue);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .tip b { color: var(--blue); }
+
+  /* COMMANDS */
+  .cmd-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-row:last-child { border-bottom: none; }
+  .cmd-name { font-family: monospace; color: var(--accent2); font-size: 14px; min-width: 110px; }
+  .cmd-desc { font-size: 13px; color: #bbb; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🎭</div>
+  <div class="title">MAFIA BOT</div>
+  <div class="subtitle">The social deduction game for Telegram</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('profile')">
+    <span class="tab-icon">👤</span>Profile
+  </div>
+  <div class="tab" onclick="switchTab('roles')">
+    <span class="tab-icon">🎭</span>Roles
+  </div>
+  <div class="tab" onclick="switchTab('rules')">
+    <span class="tab-icon">📖</span>Rules
+  </div>
+  <div class="tab" onclick="switchTab('tips')">
+    <span class="tab-icon">💡</span>Tips
+  </div>
+  <div class="tab" onclick="switchTab('commands')">
+    <span class="tab-icon">⌨️</span>Commands
+  </div>
+</div>
+
+<!-- PROFILE TAB -->
+<div class="section active" id="tab-profile">
+  <div class="card" style="margin-bottom:12px">
+    <div class="profile-avatar" id="avatarEmoji">🎭</div>
+    <div class="profile-name" id="profileName">Player</div>
+    <div class="profile-level" id="profileLevel">🥉 Novice</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val blue" id="statGames">0</div>
+        <div class="stat-label">Games played</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val gold" id="statWR">—</div>
+        <div class="stat-label">Win rate</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val green" id="statWins">0</div>
+        <div class="stat-label">Wins</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val red" id="statLosses">0</div>
+        <div class="stat-label">Losses</div>
+      </div>
+    </div>
+    <div class="wr-bar-wrap">
+      <div class="wr-bar-label">
+        <span>Win Rate</span>
+        <span id="wrPct">0%</span>
+      </div>
+      <div class="wr-bar-bg">
+        <div class="wr-bar-fill" id="wrBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROLES TAB -->
+<div class="section" id="tab-roles">
+
+  <div class="role-card" style="border-color:#e63946" onclick="toggleRole(this)">
+    <div class="role-header">
+      <div class="role-emoji">🔫</div>
+      <div>
+        <div class="role-name">Mafia / Мафия</div>
+        <div class="role-side">Team: 🔴 Mafia</div>
+      </div>
+    </div>
+    <div class="role-body">
+      Each night the mafia votes to eliminate one player. During the day, blend in and deflect suspicion onto others.<br><br>
+      <b>Win:</b> When mafia count ≥ remaining civilians.<br>
+      <span class="role-tag">Night action</span>
+      <span class="role-tag">Team play</span>
+      <span class="role-tag">Deception</span>
+    </div>
+  </div>
+
+  <div class="role-card" style="border-color:#4a9eff" onclick="toggleRole(this)">
+    <div class="role-header">
+      <div class="role-emoji">🩺</div>
+      <div>
+        <div class="role-name">Doctor / Доктор</div>
+        <div class="role-side">Team: 🟢 Civilians · 5+ players</div>
+      </div>
+    </div>
+    <div class="role-body">
+      Each night choose one player to protect. If the mafia targets them, they survive. You can heal yourself!<br><br>
+      <b>Win:</b> All mafia eliminated.<br>
+      <span class="role-tag">Night action</span>
+      <span class="role-tag">Protection</span>
+      <span class="role-tag">Solo play</span>
+    </div>
+  </div>
+
+  <div class="role-card" style="border-color:#f4a261" onclick="toggleRole(this)">
+    <div class="role-header">
+      <div class="role-emoji">🔍</div>
+      <div>
+        <div class="role-name">Detective / Детектив</div>
+        <div class="role-side">Team: 🟢 Civilians · 6+ players</div>
+      </div>
+    </div>
+    <div class="role-body">
+      Each night check one player — you'll learn if they are Mafia or not. Share information carefully, the Mafia may target you!<br><br>
+      <b>Win:</b> All mafia eliminated.<br>
+      <span class="role-tag">Night action</span>
+      <span class="role-tag">Investigation</span>
+      <span class="role-tag">Information</span>
+    </div>
+  </div>
+
+  <div class="role-card" style="border-color:#2dc653" onclick="toggleRole(this)">
+    <div class="role-header">
+      <div class="role-emoji">🧑</div>
+      <div>
+        <div class="role-name">Civilian / Мирный</div>
+        <div class="role-side">Team: 🟢 Civilians</div>
+      </div>
+    </div>
+    <div class="role-body">
+      No night action. Your power is in the day — vote wisely, listen carefully, catch the liars!<br><br>
+      <b>Win:</b> All mafia eliminated.<br>
+      <span class="role-tag">Day voting</span>
+      <span class="role-tag">Deduction</span>
+      <span class="role-tag">Majority</span>
+    </div>
+  </div>
+
+  <div style="text-align:center; font-size:12px; color:var(--sub); margin-top:8px">
+    Tap a role card to expand details
+  </div>
+</div>
+
+<!-- RULES TAB -->
+<div class="section" id="tab-rules">
+  <div class="card">
+    <div class="card-title">How to play</div>
+
+    <div class="rule-step">
+      <div class="rule-num">1</div>
+      <div class="rule-text">Add the bot to a group and <b>message it in DM</b> at least once so it can send you role cards.</div>
+    </div>
+    <div class="rule-step">
+      <div class="rule-num">2</div>
+      <div class="rule-text">Type <b>/mafia</b> in the group to open a lobby. Min. <b>4 players</b>.</div>
+    </div>
+    <div class="rule-step">
+      <div class="rule-num">3</div>
+      <div class="rule-text">Everyone presses <b>✋ Join game</b>. The creator presses <b>🚀 Start</b>.</div>
+    </div>
+    <div class="rule-step">
+      <div class="rule-num">4</div>
+      <div class="rule-text"><b>🌙 Night:</b> Special roles get DMs with action buttons. You have 45 seconds to act.</div>
+    </div>
+    <div class="rule-step">
+      <div class="rule-num">5</div>
+      <div class="rule-text"><b>☀️ Day:</b> Everyone discusses for 60 seconds, then votes who to eliminate.</div>
+    </div>
+    <div class="rule-step">
+      <div class="rule-num">6</div>
+      <div class="rule-text">Repeat until one team wins!</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Win conditions</div>
+    <div class="win-card civil">
+      <div class="win-icon">🕊️</div>
+      <div>
+        <div class="win-title">Civilians win</div>
+        <div class="win-desc">All mafia members are eliminated by vote or detective.</div>
+      </div>
+    </div>
+    <div class="win-card mafia">
+      <div class="win-icon">🔫</div>
+      <div>
+        <div class="win-title">Mafia wins</div>
+        <div class="win-desc">Mafia count ≥ civilian count (they control the vote).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Role distribution</div>
+    <div style="font-size:13px; line-height:2; color:#ccc">
+      4 players → 1 Mafia, 1 civilian, + specials<br>
+      5 players → 1 Mafia + Doctor added<br>
+      6+ players → Detective added<br>
+      Every 3 players = +1 Mafia
+    </div>
+  </div>
+</div>
+
+<!-- TIPS TAB -->
+<div class="section" id="tab-tips">
+  <div class="tip">
+    <b>🔫 Mafia tip:</b> Don't vote unanimously in the same direction. Split your votes to look innocent.
+  </div>
+  <div class="tip">
+    <b>🩺 Doctor tip:</b> In early rounds, heal the most vocal players — they're likely targeted by mafia.
+  </div>
+  <div class="tip">
+    <b>🔍 Detective tip:</b> Don't reveal your role until you have solid proof. The mafia will target you immediately.
+  </div>
+  <div class="tip">
+    <b>🧑 Civilian tip:</b> Watch who defends who. Mafia members rarely vote against each other.
+  </div>
+  <div class="tip">
+    <b>🗳 Voting tip:</b> If someone pushes hard to eliminate a player without much evidence, be suspicious.
+  </div>
+  <div class="tip">
+    <b>😶 Silence tip:</b> Very quiet players are suspicious. Mafia often stays low to avoid attention.
+  </div>
+  <div class="tip">
+    <b>📊 Math tip:</b> With 4 players alive and 1 mafia, one wrong vote = game over for civilians.
+  </div>
+  <div class="tip">
+    <b>🎭 Bluffing tip:</b> If you're mafia and suspected, claim to be the Doctor — it's harder to disprove.
+  </div>
+</div>
+
+<!-- COMMANDS TAB -->
+<div class="section" id="tab-commands">
+  <div class="card">
+    <div class="card-title">Group commands</div>
+    <div class="cmd-row">
+      <div class="cmd-name">/mafia</div>
+      <div class="cmd-desc">Create a new game lobby</div>
+    </div>
+    <div class="cmd-row">
+      <div class="cmd-name">/join</div>
+      <div class="cmd-desc">Join the current lobby</div>
+    </div>
+    <div class="cmd-row">
+      <div class="cmd-name">/players</div>
+      <div class="cmd-desc">Show current player list</div>
+    </div>
+    <div class="cmd-row">
+      <div class="cmd-name">/endgame</div>
+      <div class="cmd-desc">Force end the current game</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Private commands</div>
+    <div class="cmd-row">
+      <div class="cmd-name">/start</div>
+      <div class="cmd-desc">Open main menu &amp; set language</div>
+    </div>
+    <div class="cmd-row">
+      <div class="cmd-name">/admin</div>
+      <div class="cmd-desc">Admin panel <span class="badge">admin only</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Mini App</div>
+    <div style="font-size:13px;color:#ccc;line-height:1.6">
+      This page opens from the 🎮 Mini App button in the main menu. Shows your profile stats, role info, rules and tips — always available even outside a game.
+    </div>
+  </div>
+</div>
+
+<script>
+// Init Telegram WebApp
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  // Apply Telegram theme colors if available
+  if (tg.colorScheme === 'light') {
+    document.documentElement.style.setProperty('--bg', '#f5f5f5');
+    document.documentElement.style.setProperty('--card', '#ffffff');
+    document.documentElement.style.setProperty('--text', '#111');
+    document.documentElement.style.setProperty('--sub', '#666');
+    document.documentElement.style.setProperty('--border', '#ddd');
+  }
+}
+
+// Load user data from URL params (bot passes them as startapp param)
+function loadUserData() {
+  const params = new URLSearchParams(window.location.search);
+  // Also try Telegram initData
+  let name   = params.get('name')   || tg?.initDataUnsafe?.user?.first_name || 'Player';
+  let games  = parseInt(params.get('games')  || '0');
+  let wins   = parseInt(params.get('wins')   || '0');
+  let losses = parseInt(params.get('losses') || '0');
+
+  // Also try to parse from hash
+  if (window.location.hash) {
+    try {
+      const h = JSON.parse(decodeURIComponent(window.location.hash.slice(1)));
+      name   = h.name   || name;
+      games  = h.games  || games;
+      wins   = h.wins   || wins;
+      losses = h.losses || losses;
+    } catch(e) {}
+  }
+
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('statGames').textContent   = games;
+  document.getElementById('statWins').textContent    = wins;
+  document.getElementById('statLosses').textContent  = losses;
+
+  const wr = games > 0 ? Math.round(wins / games * 100) : 0;
+  document.getElementById('statWR').textContent  = games > 0 ? wr + '%' : '—';
+  document.getElementById('wrPct').textContent   = wr + '%';
+  setTimeout(() => {
+    document.getElementById('wrBar').style.width = wr + '%';
+  }, 300);
+
+  // Level
+  let level = '🥉 Novice';
+  if (games >= 5 && wr >= 40)  level = '🥈 Detective';
+  if (games >= 10 && wr >= 50) level = '🥇 Veteran';
+  if (games >= 20 && wr >= 60) level = '💎 Legend';
+  document.getElementById('profileLevel').textContent = level;
+
+  // Avatar emoji by level
+  const avatarMap = {'🥉 Novice':'🎭','🥈 Detective':'🔍','🥇 Veteran':'⭐️','💎 Legend':'👑'};
+  document.getElementById('avatarEmoji').textContent = avatarMap[level] || '🎭';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['profile','roles','rules','tips','commands'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => {
+    s.classList.toggle('active', s.id === 'tab-' + name);
+  });
+}
+
+function toggleRole(card) {
+  const body = card.querySelector('.role-body');
+  body.classList.toggle('open');
+}
+
+loadUserData();
+</script>
+</body>
+</html>
