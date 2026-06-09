@@ -1,564 +1,679 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>🎭 Mafia Bot</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TG Tools</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Onest:wght@300;400;500&display=swap');
+
   :root {
-    --bg: #0f0f13;
-    --card: #1a1a24;
-    --border: #2a2a3a;
-    --accent: #e63946;
-    --accent2: #f4a261;
-    --text: #f0f0f0;
-    --sub: #888;
-    --green: #2dc653;
-    --blue: #4a9eff;
+    --bg: #0a0a0f;
+    --card: #13131a;
+    --border: #1e1e2e;
+    --accent: #2AABEE;
+    --accent2: #7B61FF;
+    --text: #e8e8f0;
+    --muted: #555570;
+    --green: #3ddc84;
+    --red: #ff5c5c;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Onest', sans-serif;
     min-height: 100vh;
-    padding-bottom: 40px;
+    padding: 24px 16px 48px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(42,171,238,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(123,97,255,0.07) 0%, transparent 55%);
   }
+
+  /* ── Header ── */
   .header {
-    background: linear-gradient(135deg, #1a0a0a 0%, #2a0d1a 50%, #0d0a1a 100%);
-    padding: 24px 20px 20px;
     text-align: center;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 24px;
   }
-  .header::before {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: radial-gradient(ellipse at center, rgba(230,57,70,0.08) 0%, transparent 60%);
-    animation: pulse 4s ease-in-out infinite;
+  .header h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
   }
-  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-  .logo { font-size: 48px; margin-bottom: 8px; position: relative; z-index:1; }
-  .title { font-size: 22px; font-weight: 800; letter-spacing: 1px; position: relative; z-index:1; }
-  .subtitle { font-size: 13px; color: var(--sub); margin-top: 4px; position: relative; z-index:1; }
+  .header p { color: var(--muted); font-size: 0.82rem; }
+
+  /* ── Tabs ── */
   .tabs {
     display: flex;
-    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    max-width: 560px;
+    margin: 0 auto 24px;
     background: var(--card);
-    overflow-x: auto;
-    scrollbar-width: none;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
   }
-  .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    flex: 1; min-width: 70px;
-    padding: 12px 6px;
+    flex: 1;
     text-align: center;
-    font-size: 11px;
-    color: var(--sub);
+    padding: 10px 6px;
+    border-radius: 10px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
+    color: var(--muted);
     transition: all 0.2s;
+    user-select: none;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+
+  /* ── Panels ── */
+  .panel { display: none; max-width: 560px; margin: 0 auto; }
+  .panel.active { display: block; }
+
+  /* ── Search box ── */
+  .search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'Onest', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  .btn-main {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    padding: 13px 20px;
+    color: #fff;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
     white-space: nowrap;
   }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
-  .section { display: none; padding: 16px; }
-  .section.active { display: block; }
-  .card {
+  .btn-main:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-main:active { transform: translateY(0); }
+
+  /* ── Tags ── */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 24px;
+  }
+  .tag {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .tag:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Result cards ── */
+  .section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+
+  .results { display: flex; flex-direction: column; gap: 10px; }
+
+  .result-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: fadeIn 0.25s ease;
   }
-  .card-title {
-    font-size: 13px;
-    color: var(--sub);
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .result-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .result-info { flex: 1; }
+  .result-name {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .result-desc { font-size: 0.75rem; color: var(--muted); }
+  .open-btn {
+    background: rgba(42,171,238,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 7px 13px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .open-btn:hover { background: rgba(42,171,238,0.2); }
+
+  .note {
+    margin-top: 20px;
+    background: rgba(42,171,238,0.06);
+    border: 1px solid rgba(42,171,238,0.15);
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .note b { color: var(--accent); }
+
+  /* ── ID Finder ── */
+  .my-id-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .my-id-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'Unbounded', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.08em;
+  }
+  .my-id-value {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .my-id-name { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; }
+
+  .id-actions { display: flex; gap: 8px; justify-content: center; }
+  .btn-copy {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: #fff;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-copy:hover { opacity: 0.85; }
+  .btn-share {
+    background: rgba(123,97,255,0.12);
+    border: 1px solid var(--accent2);
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: var(--accent2);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-share:hover { background: rgba(123,97,255,0.22); }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── ID Result ── */
+  #id-result {
+    animation: fadeIn 0.25s ease;
+  }
+  .id-result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .id-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 10px;
   }
-  .profile-avatar {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
-    margin: 0 auto 12px;
+  .id-result-row:last-child { margin-bottom: 0; }
+  .id-result-key { font-size: 0.75rem; color: var(--muted); }
+  .id-result-val {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent);
   }
-  .profile-name { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .profile-level { text-align: center; font-size: 13px; color: var(--accent2); margin-bottom: 16px; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-box { background: var(--bg); border-radius: 10px; padding: 12px; text-align: center; }
-  .stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
-  .stat-val.green { color: var(--green); }
-  .stat-val.red   { color: var(--accent); }
-  .stat-val.blue  { color: var(--blue); }
-  .stat-val.gold  { color: var(--accent2); }
-  .stat-label { font-size: 11px; color: var(--sub); margin-top: 4px; }
-  .wr-bar-wrap { margin-top: 14px; }
-  .wr-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
-  .wr-bar-bg { background: var(--bg); border-radius: 20px; height: 10px; overflow: hidden; }
-  .wr-bar-fill {
-    height: 100%; border-radius: 20px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    transition: width 1s ease;
+  .id-reg-hint {
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: rgba(61,220,132,0.06);
+    border: 1px solid rgba(61,220,132,0.15);
+    border-radius: 10px;
+    padding: 10px 13px;
+    line-height: 1.5;
   }
-  .role-card {
+  .id-reg-hint b { color: var(--green); }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+  }
+  .badge-green { background: rgba(61,220,132,0.15); color: var(--green); }
+  .badge-red   { background: rgba(255,92,92,0.15);  color: var(--red); }
+  .badge-blue  { background: rgba(42,171,238,0.15); color: var(--accent); }
+
+  /* ── Link gen ── */
+  .link-result {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
+    padding: 16px 18px;
+    margin-top: 14px;
+    animation: fadeIn 0.25s ease;
+  }
+  .link-preview {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.85rem;
+    color: var(--accent);
+    word-break: break-all;
     margin-bottom: 12px;
-    border-left: 4px solid;
-    cursor: pointer;
-    transition: transform 0.15s;
   }
-  .role-card:active { transform: scale(0.98); }
-  .role-header { display: flex; align-items: center; gap: 12px; }
-  .role-emoji { font-size: 32px; }
-  .role-name { font-size: 18px; font-weight: 700; }
-  .role-side { font-size: 11px; color: var(--sub); }
-  .role-body { display: none; margin-top: 12px; font-size: 14px; line-height: 1.6; color: #ccc; }
-  .role-body.open { display: block; }
-  .role-tag {
+  .link-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: 0.82rem;
+    color: var(--text);
+    transition: transform 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Loading ── */
+  .loading {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    padding: 24px 0;
+  }
+  .spinner {
     display: inline-block;
-    background: rgba(255,255,255,0.08);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 11px;
-    margin-top: 8px; margin-right: 4px;
-  }
-  .rule-step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
-  .rule-num {
-    width: 32px; height: 32px; min-width: 32px;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
     border-radius: 50%;
-    background: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 14px;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
   }
-  .rule-text { font-size: 14px; line-height: 1.5; padding-top: 5px; }
-  .rule-text b { color: var(--accent2); }
-  .win-card {
-    border-radius: 12px; padding: 14px; margin-bottom: 10px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .win-card.civil { background: rgba(45,198,83,0.1); border: 1px solid rgba(45,198,83,0.2); }
-  .win-card.mafia { background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); }
-  .win-icon { font-size: 32px; }
-  .win-title { font-size: 15px; font-weight: 700; }
-  .win-desc  { font-size: 12px; color: var(--sub); margin-top: 3px; }
-  .tip {
-    background: var(--card); border-radius: 12px; padding: 14px;
-    margin-bottom: 10px; border-left: 3px solid var(--blue);
-    font-size: 14px; line-height: 1.5;
-  }
-  .tip b { color: var(--blue); }
-  .cmd-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
-  }
-  .cmd-row:last-child { border-bottom: none; }
-  .cmd-name { font-family: monospace; color: var(--accent2); font-size: 14px; min-width: 110px; }
-  .cmd-desc { font-size: 13px; color: #bbb; }
-  .badge {
-    display: inline-block; background: var(--accent); color: white;
-    border-radius: 20px; padding: 2px 10px; font-size: 11px;
-    font-weight: 700; margin-left: 6px;
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">🎭</div>
-  <div class="title">MAFIA BOT</div>
-  <div class="subtitle" id="headerSub">The social deduction game for Telegram</div>
+  <h1>🔧 TG Tools</h1>
+  <p>Инструменты для Telegram</p>
 </div>
 
-<div class="tabs" id="tabsBar">
-  <div class="tab active" onclick="switchTab('profile')">
-    <span class="tab-icon">👤</span><span id="tabProfile">Profile</span>
-  </div>
-  <div class="tab" onclick="switchTab('roles')">
-    <span class="tab-icon">🎭</span><span id="tabRoles">Roles</span>
-  </div>
-  <div class="tab" onclick="switchTab('rules')">
-    <span class="tab-icon">📖</span><span id="tabRules">Rules</span>
-  </div>
-  <div class="tab" onclick="switchTab('tips')">
-    <span class="tab-icon">💡</span><span id="tabTips">Tips</span>
-  </div>
-  <div class="tab" onclick="switchTab('commands')">
-    <span class="tab-icon">⌨️</span><span id="tabCmds">Commands</span>
-  </div>
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('finder')">🔍 Finder</div>
+  <div class="tab" onclick="switchTab('id')">🪪 ID Lookup</div>
+  <div class="tab" onclick="switchTab('link')">🔗 Ссылка</div>
 </div>
 
-<!-- PROFILE -->
-<div class="section active" id="tab-profile">
-  <div class="card">
-    <div class="profile-avatar" id="avatarEmoji">🎭</div>
-    <div class="profile-name" id="profileName">Player</div>
-    <div class="profile-level" id="profileLevel"></div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-val blue" id="statGames">0</div>
-        <div class="stat-label" id="lblGames">Games played</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val gold" id="statWR">—</div>
-        <div class="stat-label" id="lblWR">Win rate</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val green" id="statWins">0</div>
-        <div class="stat-label" id="lblWins">Wins</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val red" id="statLosses">0</div>
-        <div class="stat-label" id="lblLosses">Losses</div>
-      </div>
-    </div>
-    <div class="wr-bar-wrap">
-      <div class="wr-bar-label">
-        <span id="lblWinRate">Win Rate</span>
-        <span id="wrPct">0%</span>
-      </div>
-      <div class="wr-bar-bg">
-        <div class="wr-bar-fill" id="wrBar" style="width:0%"></div>
-      </div>
-    </div>
+<!-- ═══ TAB: FINDER ═══ -->
+<div class="panel active" id="tab-finder">
+  <div class="search-box">
+    <input type="text" id="finder-query" placeholder="Введи тему: мемы, игры..." />
+    <button class="btn-main" onclick="doFinderSearch()">Найти</button>
   </div>
+  <div class="tags">
+    <span class="tag" onclick="setFinderQuery('мемы')">😂 Мемы</span>
+    <span class="tag" onclick="setFinderQuery('музыка')">🎵 Музыка</span>
+    <span class="tag" onclick="setFinderQuery('игры')">🎮 Игры</span>
+    <span class="tag" onclick="setFinderQuery('москва')">🏙 Москва</span>
+    <span class="tag" onclick="setFinderQuery('общение')">🗣 Общение</span>
+    <span class="tag" onclick="setFinderQuery('криптовалюта')">💰 Крипта</span>
+    <span class="tag" onclick="setFinderQuery('программирование')">💻 Код</span>
+    <span class="tag" onclick="setFinderQuery('аниме')">🌸 Аниме</span>
+  </div>
+  <div id="finder-results" class="results"></div>
 </div>
 
-<!-- ROLES -->
-<div class="section" id="tab-roles">
-  <div class="role-card" style="border-color:#e63946" onclick="toggleRole(this)">
-    <div class="role-header">
-      <div class="role-emoji">🔫</div>
-      <div>
-        <div class="role-name" id="roleMafiaName">Mafia</div>
-        <div class="role-side" id="roleMafiaTeam">Team: 🔴 Mafia</div>
-      </div>
+<!-- ═══ TAB: ID LOOKUP ═══ -->
+<div class="panel" id="tab-id">
+
+  <!-- My ID card -->
+  <div class="my-id-card" id="my-id-card">
+    <div class="my-id-label">Мой Telegram ID</div>
+    <div class="my-id-value" id="my-id-val">—</div>
+    <div class="my-id-name" id="my-id-name">Загрузка...</div>
+    <div class="id-actions">
+      <button class="btn-copy" onclick="copyMyId()">📋 Скопировать</button>
+      <button class="btn-share" onclick="shareMyId()">📤 Поделиться</button>
     </div>
-    <div class="role-body" id="roleMafiaBody"></div>
   </div>
-  <div class="role-card" style="border-color:#4a9eff" onclick="toggleRole(this)">
-    <div class="role-header">
-      <div class="role-emoji">🩺</div>
-      <div>
-        <div class="role-name" id="roleDoctorName">Doctor</div>
-        <div class="role-side" id="roleDoctorTeam">Team: 🟢 Civilians · 5+ players</div>
-      </div>
-    </div>
-    <div class="role-body" id="roleDoctorBody"></div>
+
+  <div class="divider">или найди по @username</div>
+
+  <div class="search-box">
+    <input type="text" id="id-query" placeholder="@username или ID числом" />
+    <button class="btn-main" onclick="doIdLookup()">Найти</button>
   </div>
-  <div class="role-card" style="border-color:#f4a261" onclick="toggleRole(this)">
-    <div class="role-header">
-      <div class="role-emoji">🔍</div>
-      <div>
-        <div class="role-name" id="roleDetName">Detective</div>
-        <div class="role-side" id="roleDetTeam">Team: 🟢 Civilians · 6+ players</div>
-      </div>
-    </div>
-    <div class="role-body" id="roleDetBody"></div>
-  </div>
-  <div class="role-card" style="border-color:#2dc653" onclick="toggleRole(this)">
-    <div class="role-header">
-      <div class="role-emoji">🧑</div>
-      <div>
-        <div class="role-name" id="roleCivName">Civilian</div>
-        <div class="role-side" id="roleCivTeam">Team: 🟢 Civilians</div>
-      </div>
-    </div>
-    <div class="role-body" id="roleCivBody"></div>
-  </div>
-  <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px" id="tapHint">Tap a role to expand</div>
+
+  <div id="id-result"></div>
 </div>
 
-<!-- RULES -->
-<div class="section" id="tab-rules">
-  <div class="card">
-    <div class="card-title" id="rulesHowTitle">How to play</div>
-    <div id="ruleSteps"></div>
+<!-- ═══ TAB: LINK GEN ═══ -->
+<div class="panel" id="tab-link">
+  <div class="search-box">
+    <input type="text" id="link-query" placeholder="@username или t.me/..." />
+    <button class="btn-main" onclick="doLinkGen()">Создать</button>
   </div>
-  <div class="card">
-    <div class="card-title" id="rulesWinTitle">Win conditions</div>
-    <div class="win-card civil">
-      <div class="win-icon">🕊️</div>
-      <div>
-        <div class="win-title" id="winCivTitle">Civilians win</div>
-        <div class="win-desc" id="winCivDesc">All mafia eliminated.</div>
-      </div>
-    </div>
-    <div class="win-card mafia">
-      <div class="win-icon">🔫</div>
-      <div>
-        <div class="win-title" id="winMafTitle">Mafia wins</div>
-        <div class="win-desc" id="winMafDesc">Mafia count ≥ civilians.</div>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title" id="ruleDistTitle">Role distribution</div>
-    <div style="font-size:13px;line-height:2;color:#ccc" id="ruleDistText"></div>
+
+  <div id="link-result"></div>
+
+  <div class="note" style="margin-top:14px">
+    <b>Что это?</b> Вводи @username любого чата, канала или пользователя — получишь красивую ссылку для шеринга, а также кнопки быстрого открытия.
   </div>
 </div>
 
-<!-- TIPS -->
-<div class="section" id="tab-tips">
-  <div id="tipsContainer"></div>
-</div>
-
-<!-- COMMANDS -->
-<div class="section" id="tab-commands">
-  <div class="card">
-    <div class="card-title" id="cmdGroupTitle">Group commands</div>
-    <div id="cmdGroupList"></div>
-  </div>
-  <div class="card">
-    <div class="card-title" id="cmdPrivTitle">Private commands</div>
-    <div id="cmdPrivList"></div>
-  </div>
-</div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
-
-// ── TRANSLATIONS ──────────────────────────────────────────────────────────
-const LANG = {
-  en: {
-    headerSub: "The social deduction game for Telegram",
-    tabProfile: "Profile", tabRoles: "Roles", tabRules: "Rules",
-    tabTips: "Tips", tabCmds: "Commands",
-    lblGames: "Games played", lblWR: "Win rate",
-    lblWins: "Wins", lblLosses: "Losses", lblWinRate: "Win Rate",
-    levels: { novice:"🥉 Novice", detective:"🥈 Detective", veteran:"🥇 Veteran", legend:"💎 Legend" },
-    roleMafiaName:"Mafia", roleMafiaTeam:"Team: 🔴 Mafia",
-    roleMafiaBody:`Each night the mafia votes to eliminate one player. During the day, blend in and deflect suspicion.<br><br><b>Win:</b> Mafia count ≥ civilians.<br><span class="role-tag">Night action</span><span class="role-tag">Deception</span>`,
-    roleDoctorName:"Doctor", roleDoctorTeam:"Team: 🟢 Civilians · 5+ players",
-    roleDoctorBody:`Each night protect one player. If mafia targets them, they survive. Can heal yourself!<br><br><b>Win:</b> All mafia eliminated.<br><span class="role-tag">Night action</span><span class="role-tag">Protection</span>`,
-    roleDetName:"Detective", roleDetTeam:"Team: 🟢 Civilians · 6+ players",
-    roleDetBody:`Each night check one player — learn if they are Mafia or not. Share info carefully!<br><br><b>Win:</b> All mafia eliminated.<br><span class="role-tag">Night action</span><span class="role-tag">Investigation</span>`,
-    roleCivName:"Civilian", roleCivTeam:"Team: 🟢 Civilians",
-    roleCivBody:`No night action. Vote during the day to eliminate mafia. Listen, analyze, persuade!<br><br><b>Win:</b> All mafia eliminated.<br><span class="role-tag">Day voting</span><span class="role-tag">Deduction</span>`,
-    tapHint:"Tap a role to expand",
-    rulesHowTitle:"How to play",
-    ruleSteps:[
-      "Add the bot to a group and <b>message it in DM</b> at least once.",
-      "Type <b>/mafia</b> in the group to open a lobby. Min. <b>4 players</b>.",
-      "Everyone presses <b>✋ Join game</b>. Creator presses <b>🚀 Start</b>.",
-      "<b>🌙 Night:</b> Special roles get DMs with action buttons. 45 seconds.",
-      "<b>☀️ Day:</b> Discuss for 60 seconds, then vote who to eliminate.",
-      "Repeat until one team wins!"
-    ],
-    rulesWinTitle:"Win conditions",
-    winCivTitle:"Civilians win", winCivDesc:"All mafia members eliminated.",
-    winMafTitle:"Mafia wins", winMafDesc:"Mafia count ≥ civilian count.",
-    ruleDistTitle:"Role distribution",
-    ruleDistText:"4 players → 1 Mafia<br>5 players → + Doctor<br>6+ players → + Detective<br>Every 3 players = +1 Mafia",
-    tips:[
-      ["🔫 Mafia tip","Don't vote unanimously in the same direction. Split votes to look innocent."],
-      ["🩺 Doctor tip","In early rounds, heal the most vocal players — they're likely targeted."],
-      ["🔍 Detective tip","Don't reveal your role until you have solid proof. Mafia will target you."],
-      ["🧑 Civilian tip","Watch who defends who. Mafia rarely votes against each other."],
-      ["🗳 Voting tip","Someone pushing hard without evidence? Be suspicious."],
-      ["😶 Silence tip","Very quiet players are suspicious. Mafia often stays low."],
-      ["📊 Math tip","With 4 alive and 1 mafia, one wrong vote = game over for civilians."],
-      ["🎭 Bluff tip","If you're mafia and suspected, claim to be the Doctor."],
-    ],
-    cmdGroupTitle:"Group commands", cmdPrivTitle:"Private commands",
-    cmdGroup:[
-      ["/mafia","Create a new game lobby"],
-      ["/join","Join the current lobby"],
-      ["/players","Show current player list"],
-      ["/endgame","Force end the game"],
-    ],
-    cmdPriv:[
-      ["/start","Open main menu & set language"],
-      ["/admin","Admin panel"],
-    ],
-  },
-  ru: {
-    headerSub: "Игра в мафию прямо в Telegram",
-    tabProfile: "Профиль", tabRoles: "Роли", tabRules: "Правила",
-    tabTips: "Советы", tabCmds: "Команды",
-    lblGames: "Игр сыграно", lblWR: "Винрейт",
-    lblWins: "Победы", lblLosses: "Поражения", lblWinRate: "Винрейт",
-    levels: { novice:"🥉 Новичок", detective:"🥈 Детектив", veteran:"🥇 Ветеран", legend:"💎 Легенда" },
-    roleMafiaName:"Мафия", roleMafiaTeam:"Команда: 🔴 Мафия",
-    roleMafiaBody:`Каждую ночь мафия голосует за жертву. Днём маскируйтесь и направляйте подозрения на других.<br><br><b>Победа:</b> Мафии ≥ мирных.<br><span class="role-tag">Ночное действие</span><span class="role-tag">Обман</span>`,
-    roleDoctorName:"Доктор", roleDoctorTeam:"Команда: 🟢 Мирные · от 5 игроков",
-    roleDoctorBody:`Каждую ночь защищайте одного игрока. Если мафия выбрала его — он выживет. Можно лечить себя!<br><br><b>Победа:</b> Вся мафия устранена.<br><span class="role-tag">Ночное действие</span><span class="role-tag">Защита</span>`,
-    roleDetName:"Детектив", roleDetTeam:"Команда: 🟢 Мирные · от 6 игроков",
-    roleDetBody:`Каждую ночь проверяйте одного игрока — узнаете мафия он или нет. Делитесь осторожно!<br><br><b>Победа:</b> Вся мафия устранена.<br><span class="role-tag">Ночное действие</span><span class="role-tag">Расследование</span>`,
-    roleCivName:"Мирный", roleCivTeam:"Команда: 🟢 Мирные",
-    roleCivBody:`Нет ночного действия. Голосуйте днём, вычисляйте мафию. Слушайте, анализируйте!<br><br><b>Победа:</b> Вся мафия устранена.<br><span class="role-tag">Голосование</span><span class="role-tag">Логика</span>`,
-    tapHint:"Нажми на роль чтобы раскрыть",
-    rulesHowTitle:"Как играть",
-    ruleSteps:[
-      "Добавь бота в группу и <b>напиши ему в ЛС</b> хотя бы раз.",
-      "Напиши <b>/mafia</b> в группе для создания лобби. Минимум <b>4 игрока</b>.",
-      "Все нажимают <b>✋ Войти в игру</b>. Создатель нажимает <b>🚀 Начать</b>.",
-      "<b>🌙 Ночь:</b> Роли получают кнопки в ЛС. 45 секунд на действие.",
-      "<b>☀️ День:</b> Обсуждение 60 секунд, затем голосование.",
-      "Повторяем до победы одной из команд!"
-    ],
-    rulesWinTitle:"Условия победы",
-    winCivTitle:"Победа мирных", winCivDesc:"Вся мафия устранена голосованием.",
-    winMafTitle:"Победа мафии", winMafDesc:"Мафии ≥ мирных (они контролируют голос).",
-    ruleDistTitle:"Распределение ролей",
-    ruleDistText:"4 игрока → 1 Мафия<br>5 игроков → + Доктор<br>6+ игроков → + Детектив<br>Каждые 3 игрока = +1 Мафия",
-    tips:[
-      ["🔫 Совет мафии","Не голосуйте все в одну сторону. Разделяйте голоса чтобы выглядеть невинно."],
-      ["🩺 Совет доктора","В начале лечите самых активных игроков — мафия метит в них."],
-      ["🔍 Совет детектива","Не раскрывайте роль пока нет доказательств. Мафия убьёт вас следующей ночью."],
-      ["🧑 Совет мирного","Следите кто кого защищает. Мафия редко голосует против своих."],
-      ["🗳 Совет по голосованию","Кто давит без доказательств — подозревайте его."],
-      ["😶 Совет о молчании","Тихие игроки подозрительны. Мафия часто молчит."],
-      ["📊 Математика","4 живых, 1 мафия — один неправильный голос = поражение мирных."],
-      ["🎭 Блеф","Если вы мафия и вас подозревают — прикиньтесь доктором."],
-    ],
-    cmdGroupTitle:"Команды в группе", cmdPrivTitle:"Команды в личке",
-    cmdGroup:[
-      ["/mafia","Создать лобби для игры"],
-      ["/join","Вступить в лобби"],
-      ["/players","Показать список игроков"],
-      ["/endgame","Завершить игру принудительно"],
-    ],
-    cmdPriv:[
-      ["/start","Главное меню и выбор языка"],
-      ["/admin","Панель администратора"],
-    ],
+  // ─── Telegram WebApp init ────────────────────────────────────────────────
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
   }
-};
 
-// ── DETECT LANGUAGE ───────────────────────────────────────────────────────
-function detectLang() {
-  // 1. URL param ?lang=ru
-  const p = new URLSearchParams(window.location.search);
-  if (p.get('lang')) return p.get('lang');
-  // 2. Telegram initData startParam
-  const sp = tg?.initDataUnsafe?.start_param || '';
-  if (sp.includes('lang_ru')) return 'ru';
-  if (sp.includes('lang_en')) return 'en';
-  // 3. Telegram language code
-  const tgLang = tg?.initDataUnsafe?.user?.language_code || navigator.language || 'en';
-  return tgLang.startsWith('ru') ? 'ru' : 'en';
-}
+  const tgUser = tg?.initDataUnsafe?.user;
+  let myId   = tgUser?.id   || null;
+  let myName = tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : null;
+  let myUsername = tgUser?.username || null;
 
-// ── APPLY TRANSLATIONS ────────────────────────────────────────────────────
-function applyLang(lang) {
-  const tx = LANG[lang] || LANG.en;
+  // Fill my ID card
+  document.getElementById('my-id-val').textContent  = myId   || 'Открой в Telegram';
+  document.getElementById('my-id-name').textContent =
+    myName ? `${myName}${myUsername ? ' · @' + myUsername : ''}` : 'Данные недоступны вне Telegram';
 
-  document.getElementById('headerSub').textContent     = tx.headerSub;
-  document.getElementById('tabProfile').textContent    = tx.tabProfile;
-  document.getElementById('tabRoles').textContent      = tx.tabRoles;
-  document.getElementById('tabRules').textContent      = tx.tabRules;
-  document.getElementById('tabTips').textContent       = tx.tabTips;
-  document.getElementById('tabCmds').textContent       = tx.tabCmds;
-  document.getElementById('lblGames').textContent      = tx.lblGames;
-  document.getElementById('lblWR').textContent         = tx.lblWR;
-  document.getElementById('lblWins').textContent       = tx.lblWins;
-  document.getElementById('lblLosses').textContent     = tx.lblLosses;
-  document.getElementById('lblWinRate').textContent    = tx.lblWinRate;
-  document.getElementById('roleMafiaName').textContent = tx.roleMafiaName;
-  document.getElementById('roleMafiaTeam').textContent = tx.roleMafiaTeam;
-  document.getElementById('roleMafiaBody').innerHTML   = tx.roleMafiaBody;
-  document.getElementById('roleDoctorName').textContent= tx.roleDoctorName;
-  document.getElementById('roleDoctorTeam').textContent= tx.roleDoctorTeam;
-  document.getElementById('roleDoctorBody').innerHTML  = tx.roleDoctorBody;
-  document.getElementById('roleDetName').textContent   = tx.roleDetName;
-  document.getElementById('roleDetTeam').textContent   = tx.roleDetTeam;
-  document.getElementById('roleDetBody').innerHTML     = tx.roleDetBody;
-  document.getElementById('roleCivName').textContent   = tx.roleCivName;
-  document.getElementById('roleCivTeam').textContent   = tx.roleCivTeam;
-  document.getElementById('roleCivBody').innerHTML     = tx.roleCivBody;
-  document.getElementById('tapHint').textContent       = tx.tapHint;
-  document.getElementById('rulesHowTitle').textContent = tx.rulesHowTitle;
-  document.getElementById('rulesWinTitle').textContent = tx.rulesWinTitle;
-  document.getElementById('winCivTitle').textContent   = tx.winCivTitle;
-  document.getElementById('winCivDesc').textContent    = tx.winCivDesc;
-  document.getElementById('winMafTitle').textContent   = tx.winMafTitle;
-  document.getElementById('winMafDesc').textContent    = tx.winMafDesc;
-  document.getElementById('ruleDistTitle').textContent = tx.ruleDistTitle;
-  document.getElementById('ruleDistText').innerHTML    = tx.ruleDistText;
-  document.getElementById('cmdGroupTitle').textContent = tx.cmdGroupTitle;
-  document.getElementById('cmdPrivTitle').textContent  = tx.cmdPrivTitle;
+  // ─── Tabs ────────────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', ['finder','id','link'][i] === name);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+  }
 
-  // Rule steps
-  document.getElementById('ruleSteps').innerHTML = tx.ruleSteps.map((s,i)=>`
-    <div class="rule-step">
-      <div class="rule-num">${i+1}</div>
-      <div class="rule-text">${s}</div>
-    </div>`).join('');
+  // ─── Toast ───────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
 
-  // Tips
-  document.getElementById('tipsContainer').innerHTML = tx.tips.map(([b,t])=>`
-    <div class="tip"><b>${b}:</b> ${t}</div>`).join('');
+  // ─── FINDER ──────────────────────────────────────────────────────────────
+  function setFinderQuery(q) {
+    document.getElementById('finder-query').value = q;
+    doFinderSearch();
+  }
 
-  // Commands
-  document.getElementById('cmdGroupList').innerHTML = tx.cmdGroup.map(([c,d])=>`
-    <div class="cmd-row"><div class="cmd-name">${c}</div><div class="cmd-desc">${d}</div></div>`).join('');
-  document.getElementById('cmdPrivList').innerHTML = tx.cmdPriv.map(([c,d])=>`
-    <div class="cmd-row"><div class="cmd-name">${c}</div><div class="cmd-desc">${d}</div></div>`).join('');
+  function doFinderSearch() {
+    const q = document.getElementById('finder-query').value.trim();
+    if (!q) return;
+    const enc = encodeURIComponent(q);
+    const results = document.getElementById('finder-results');
 
-  // Levels
-  document.getElementById('profileLevel').textContent = tx.levels.novice;
-  window._tx = tx;
-}
+    results.innerHTML = `
+      <div class="section-title">Открой и найди чаты 👇</div>
+      ${makeCard('📊', 'TGStat — каталог чатов', `Самый большой каталог. Ищет по теме «${q}»`,
+          `https://tgstat.ru/search?q=${enc}&type=group`)}
+      ${makeCard('📱', 'Telegram — встроенный поиск', `Открывает поиск прямо в Telegram по «${q}»`,
+          `https://t.me/s/${enc}`)}
+      ${makeCard('🌐', 'TLGRM.ru', 'Ещё один каталог чатов и каналов',
+          `https://tlgrm.ru/channels/search?q=${enc}`)}
+      ${makeCard('🔎', 'Google поиск', 'Ищет публичные t.me ссылки через Google',
+          `https://www.google.com/search?q=site:t.me+${enc}+чат`)}
+    `;
+  }
 
-// ── LOAD USER DATA ────────────────────────────────────────────────────────
-function loadUserData(lang) {
-  const p    = new URLSearchParams(window.location.search);
-  const tx   = window._tx;
-  const name = p.get('name') || tg?.initDataUnsafe?.user?.first_name || 'Player';
-  const games  = parseInt(p.get('games')  || '0');
-  const wins   = parseInt(p.get('wins')   || '0');
-  const losses = parseInt(p.get('losses') || '0');
+  function makeCard(icon, name, desc, url) {
+    return `
+      <div class="result-card">
+        <div class="result-icon">${icon}</div>
+        <div class="result-info">
+          <div class="result-name">${name}</div>
+          <div class="result-desc">${desc}</div>
+        </div>
+        <a href="${url}" target="_blank">
+          <button class="open-btn">Открыть</button>
+        </a>
+      </div>`;
+  }
 
-  document.getElementById('profileName').textContent  = name;
-  document.getElementById('statGames').textContent    = games;
-  document.getElementById('statWins').textContent     = wins;
-  document.getElementById('statLosses').textContent   = losses;
-
-  const wr = games > 0 ? Math.round(wins / games * 100) : 0;
-  document.getElementById('statWR').textContent = games > 0 ? wr + '%' : '—';
-  document.getElementById('wrPct').textContent  = wr + '%';
-  setTimeout(() => { document.getElementById('wrBar').style.width = wr + '%'; }, 300);
-
-  let levelKey = 'novice';
-  if (games >= 5  && wr >= 40) levelKey = 'detective';
-  if (games >= 10 && wr >= 50) levelKey = 'veteran';
-  if (games >= 20 && wr >= 60) levelKey = 'legend';
-  document.getElementById('profileLevel').textContent = tx.levels[levelKey];
-
-  const avatars = {novice:'🎭', detective:'🔍', veteran:'⭐️', legend:'👑'};
-  document.getElementById('avatarEmoji').textContent = avatars[levelKey];
-}
-
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['profile','roles','rules','tips','commands'];
-    t.classList.toggle('active', names[i] === name);
+  document.getElementById('finder-query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doFinderSearch();
   });
-  document.querySelectorAll('.section').forEach(s => {
-    s.classList.toggle('active', s.id === 'tab-' + name);
+
+  // ─── ID LOOKUP ───────────────────────────────────────────────────────────
+  function copyMyId() {
+    if (!myId) { showToast('❌ ID недоступен вне Telegram'); return; }
+    navigator.clipboard?.writeText(String(myId)).then(() => showToast('✅ ID скопирован!'));
+  }
+
+  function shareMyId() {
+    if (!myId) { showToast('❌ ID недоступен вне Telegram'); return; }
+    const text = `Мой Telegram ID: ${myId}${myUsername ? '\n@' + myUsername : ''}`;
+    if (tg) {
+      tg.switchInlineQuery(text);
+    } else {
+      navigator.clipboard?.writeText(text).then(() => showToast('✅ Скопировано для шеринга!'));
+    }
+  }
+
+  function doIdLookup() {
+    const q = document.getElementById('id-query').value.trim();
+    if (!q) return;
+
+    const resultEl = document.getElementById('id-result');
+    resultEl.innerHTML = `<div class="loading"><span class="spinner"></span>Запрашиваю у бота...</div>`;
+
+    // Send to bot via WebApp if available, else show instruction
+    if (tg) {
+      tg.sendData(JSON.stringify({ action: 'lookup_id', query: q }));
+      resultEl.innerHTML = `
+        <div class="id-result-card">
+          <div class="id-result-row">
+            <span class="id-result-key">Запрос отправлен боту</span>
+            <span class="id-result-val">${q}</span>
+          </div>
+          <div class="id-reg-hint">
+            Бот пришлёт результат в чат. Если <b>числовой ID</b> — посчитаем примерную дату регистрации.
+          </div>
+        </div>`;
+    } else {
+      // Fallback: parse numeric ID locally if it's a number
+      const num = parseInt(q.replace('@', ''));
+      if (!isNaN(num) && num > 0) {
+        showLocalIdInfo(resultEl, num, q);
+      } else {
+        resultEl.innerHTML = `
+          <div class="id-result-card">
+            <div class="id-result-row">
+              <span class="id-result-key">Username</span>
+              <span class="id-result-val">${q}</span>
+            </div>
+            <div class="id-reg-hint">
+              Открой мини-апп через бота — тогда он найдёт ID по @username автоматически.
+            </div>
+          </div>`;
+      }
+    }
+  }
+
+  function showLocalIdInfo(el, id, original) {
+    const era = getRegistrationEra(id);
+    el.innerHTML = `
+      <div class="id-result-card">
+        <div class="id-result-row">
+          <span class="id-result-key">ID</span>
+          <span class="id-result-val">${id}</span>
+        </div>
+        <div class="id-result-row">
+          <span class="id-result-key">Тип</span>
+          <span class="status-badge badge-blue">${id > 1000000000 ? 'Новый аккаунт' : 'Старый аккаунт'}</span>
+        </div>
+        <div class="id-reg-hint">
+          📅 Примерная дата регистрации: <b>${era}</b><br>
+          <small style="opacity:.7">Определяется приблизительно по диапазону ID</small>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn-copy" onclick="navigator.clipboard?.writeText('${id}').then(()=>showToast('✅ Скопирован!'))">📋 Скопировать ID</button>
+        <button class="btn-share" onclick="shareIdCard('${id}', '${original}')">📤 Поделиться</button>
+      </div>`;
+  }
+
+  function getRegistrationEra(id) {
+    if (id < 1000000)       return 'до 2014 (очень старый)';
+    if (id < 10000000)      return '2014–2015';
+    if (id < 100000000)     return '2015–2016';
+    if (id < 300000000)     return '2016–2017';
+    if (id < 600000000)     return '2017–2018';
+    if (id < 1000000000)    return '2018–2019';
+    if (id < 1500000000)    return '2019–2020';
+    if (id < 2000000000)    return '2020–2021';
+    if (id < 5000000000)    return '2021–2022';
+    if (id < 7000000000)    return '2022–2023';
+    return '2023 и позже';
+  }
+
+  function shareIdCard(id, username) {
+    const text = `Telegram ID: ${id}${username.startsWith('@') ? '\n' + username : ''}`;
+    navigator.clipboard?.writeText(text).then(() => showToast('✅ Скопировано!'));
+  }
+
+  document.getElementById('id-query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doIdLookup();
   });
-}
 
-function toggleRole(card) {
-  card.querySelector('.role-body').classList.toggle('open');
-}
+  // ─── LINK GENERATOR ──────────────────────────────────────────────────────
+  function doLinkGen() {
+    let q = document.getElementById('link-query').value.trim();
+    if (!q) return;
 
-// ── INIT ──────────────────────────────────────────────────────────────────
-const lang = detectLang();
-applyLang(lang);
-loadUserData(lang);
+    // Normalize
+    q = q.replace(/^https?:\/\/t\.me\//, '').replace(/^@/, '').split('?')[0].split('/')[0];
+    if (!q) return;
+
+    const link    = `https://t.me/${q}`;
+    const linkPlus = `https://t.me/${q}?start=ref`;
+
+    document.getElementById('link-result').innerHTML = `
+      <div class="link-result">
+        <div class="my-id-label" style="margin-bottom:6px">Ссылка готова</div>
+        <div class="link-preview">${link}</div>
+        <div class="link-actions">
+          <button class="btn-copy" onclick="navigator.clipboard?.writeText('${link}').then(()=>showToast('✅ Ссылка скопирована!'))">📋 Скопировать</button>
+          <a href="${link}" target="_blank"><button class="open-btn" style="height:100%">🔗 Открыть</button></a>
+          <button class="btn-share" onclick="shareTg('${link}')">📤 Поделиться</button>
+        </div>
+      </div>
+
+      <div class="link-result" style="margin-top:10px">
+        <div class="my-id-label" style="margin-bottom:6px">Превью-ссылка (t.me/s/)</div>
+        <div class="link-preview">https://t.me/s/${q}</div>
+        <div class="link-actions">
+          <button class="btn-copy" onclick="navigator.clipboard?.writeText('https://t.me/s/${q}').then(()=>showToast('✅ Скопирована!'))">📋 Скопировать</button>
+          <a href="https://t.me/s/${q}" target="_blank"><button class="open-btn">🔗 Превью</button></a>
+        </div>
+      </div>`;
+  }
+
+  function shareTg(url) {
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
+    window.open(shareUrl, '_blank');
+  }
+
+  document.getElementById('link-query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLinkGen();
+  });
 </script>
 </body>
 </html>
